@@ -9,6 +9,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <semaphore.h>
 
 #define _POSIX_C_SOURCE 200809L
 
