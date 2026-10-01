@@ -91,11 +91,10 @@ static int install_signal_handlers(void)
 //ingresar conexion para consumers, esperar si esta llena
 static int meter_conexion_cola(connection_t connection)
 {
+    sem_wait(&semaforo2);// Espera hasta que exista un espacio disponible en la cola
     pthread_mutex_lock(&g_cola.mutex);
 
-    while (g_cola.count == Capacidad_Cola && !g_cola.closed) {
-        pthread_cond_wait(&g_cola.not_full, &g_cola.mutex);
-    }
+   
 
     if (g_cola.closed) {
         pthread_mutex_unlock(&g_cola.mutex);
@@ -127,8 +126,9 @@ static int sacar_conexion_cola(connection_t *connection)
     g_cola.head = (g_cola.head + 1) % Capacidad_Cola;
     --g_cola.count;
 
-    pthread_cond_signal(&g_cola.not_full);
+    
     pthread_mutex_unlock(&g_cola.mutex);
+    sem_post(&semaforo2); // Devuelve un espacio disponible a la cola
     return 0;
 }
 
