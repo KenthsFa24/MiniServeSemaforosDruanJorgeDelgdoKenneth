@@ -212,6 +212,8 @@ return EXIT_FAILURE;
 }
 unsigned short port = parse_port(argc, argv);
 long consumer_count = parse_consumers(argc, argv);
+sem_init(&semaforo1, 0, 0); // Inicializa en 0 
+
 int listen_file_descriptor = nu_listen(port, LISTEN_BACKLOG);
 if (listen_file_descriptor < 0) {
 return EXIT_FAILURE;
