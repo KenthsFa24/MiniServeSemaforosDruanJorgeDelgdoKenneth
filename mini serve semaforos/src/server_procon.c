@@ -43,8 +43,7 @@ typedef struct {
     size_t count;
     int closed;
     pthread_mutex_t mutex;
-    pthread_cond_t not_empty; //despiertar a los consumers
-    pthread_cond_t not_full;//despertar al producer
+
 } cola_conexiones_t;
 
 
@@ -140,6 +139,11 @@ static void cerrar_cola(void)
     pthread_cond_broadcast(&g_cola.not_empty);
     pthread_cond_broadcast(&g_cola.not_full);
     pthread_mutex_unlock(&g_cola.mutex);
+    for (long i = 0; i < cantidad_consumers; ++i) {
+        sem_post(&semaforo1);
+    }
+
+    
 }
 /* Hilo consumidor: atiende conexiones de la cola hasta que se cierre */
 static void *consumer(void *arg)
@@ -258,7 +262,7 @@ break;
 if (close(listen_file_descriptor) < 0) {
 perror("close(listen_file_descriptor)");
 }
-cerrar_cola();
+cerrar_cola(started);
 for (long i = 0; i < started; ++i) {
 int rc = pthread_join(consumers[i], NULL);
 if (rc != 0) {
