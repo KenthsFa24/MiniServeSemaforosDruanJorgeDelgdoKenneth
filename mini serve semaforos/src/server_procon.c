@@ -54,8 +54,6 @@ static cola_conexiones_t g_cola = {
     .count = 0,
     .closed = 0,
     .mutex = PTHREAD_MUTEX_INITIALIZER,
-    .not_empty = PTHREAD_COND_INITIALIZER,
-    .not_full = PTHREAD_COND_INITIALIZER
 };
 static void on_sigint(int signum)
 {
@@ -132,12 +130,10 @@ static int sacar_conexion_cola(connection_t *connection)
 }
 
 /* Cierra la cola y despierta a todos los hilos para que terminen */
-static void cerrar_cola(void)
+static void cerrar_cola(long cantidad_consumers)
 {
     pthread_mutex_lock(&g_cola.mutex);
     g_cola.closed = 1;
-    pthread_cond_broadcast(&g_cola.not_empty);
-    pthread_cond_broadcast(&g_cola.not_full);
     pthread_mutex_unlock(&g_cola.mutex);
     for (long i = 0; i < cantidad_consumers; ++i) {
         sem_post(&semaforo1);
