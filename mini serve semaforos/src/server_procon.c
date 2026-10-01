@@ -106,19 +106,17 @@ static int meter_conexion_cola(connection_t connection)
     g_cola.tail = (g_cola.tail + 1) % Capacidad_Cola;
     ++g_cola.count;
 
-    pthread_cond_signal(&g_cola.not_empty);
     pthread_mutex_unlock(&g_cola.mutex);
+    sem_post(&semaforo1); // Avisa que hay una conexión disponible para consumir
     return 0;
 }
 
 // funcion para los consumer, sacan una conexion y esperan si esta vacia
 static int sacar_conexion_cola(connection_t *connection)
 {
+    sem_wait(&semaforo1); // Espera hasta que exista una conexión disponible
+    
     pthread_mutex_lock(&g_cola.mutex);
-
-    while (g_cola.count == 0 && !g_cola.closed) {
-        pthread_cond_wait(&g_cola.not_empty, &g_cola.mutex);
-    }
 
     if (g_cola.count == 0 && g_cola.closed) {
         pthread_mutex_unlock(&g_cola.mutex);
