@@ -24,6 +24,7 @@ static volatile sig_atomic_t g_running = 1;
 static unsigned long g_requests_served = 0;//variable global para contar el número de solicitudes atendidas
 //es posible al ser compartida por varios hilos, que se produzcan condiciones de carrera al actualizarla
 //lo que podría dar lugar a resultados incorrectos o inconsistentes. Usare mutex para corregirlo
+sem_t semaforo1; // Semáforo contador que controla la cantidad de conexiones disponibles en la cola para los consumidores
 
 pthread_mutex_t candado = PTHREAD_MUTEX_INITIALIZER;//inicializo el mutex para proteger la variable global g_requests_served
 //se hace global para que pueda ser accedida por todos los hilos
