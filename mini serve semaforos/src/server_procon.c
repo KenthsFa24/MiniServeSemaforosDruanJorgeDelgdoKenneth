@@ -25,7 +25,7 @@ static unsigned long g_requests_served = 0;//variable global para contar el núm
 //es posible al ser compartida por varios hilos, que se produzcan condiciones de carrera al actualizarla
 //lo que podría dar lugar a resultados incorrectos o inconsistentes. Usare mutex para corregirlo
 sem_t semaforo1; // Semáforo contador que controla la cantidad de conexiones disponibles en la cola para los consumidores
-
+sem_t semaforo2; // Semáforo contador para espacios disponibles en la cola
 pthread_mutex_t candado = PTHREAD_MUTEX_INITIALIZER;//inicializo el mutex para proteger la variable global g_requests_served
 //se hace global para que pueda ser accedida por todos los hilos
 
@@ -211,7 +211,7 @@ return EXIT_FAILURE;
 unsigned short port = parse_port(argc, argv);
 long consumer_count = parse_consumers(argc, argv);
 sem_init(&semaforo1, 0, 0); // Inicializa en 0 
-
+sem_init(&semaforo2, 0, Capacidad_Cola);
 int listen_file_descriptor = nu_listen(port, LISTEN_BACKLOG);
 if (listen_file_descriptor < 0) {
 return EXIT_FAILURE;
