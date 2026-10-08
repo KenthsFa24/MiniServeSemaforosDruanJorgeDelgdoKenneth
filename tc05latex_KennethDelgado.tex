@@ -1,0 +1,240 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\usepackage{listings}
+
+\geometry{letterpaper,margin=2.5cm}
+
+\lstset{
+    basicstyle=\ttfamily\small,
+    frame=single,
+    breaklines=true,
+    columns=fullflexible,
+    keepspaces=true
+}
+
+\begin{document}
+
+\section{Readers-Writers}
+
+\subsection{Pregunta 1}
+
+¿Cómo se permite que varios lectores accedan al recurso al mismo tiempo,
+mientras que los escritores tengan acceso exclusivo?
+
+\begin{lstlisting}
+readSwitch = Lightswitch()
+roomEmpty = Semaphore(1)
+
+# Escritor
+roomEmpty.wait()
+
+# seccion critica
+
+roomEmpty.signal()
+
+# Lector
+readSwitch.lock(roomEmpty)
+
+# seccion critica
+
+readSwitch.unlock(roomEmpty)
+\end{lstlisting}
+
+\section{No-Starve}
+
+\subsection{Pregunta 2}
+
+¿Cómo se evita que los escritores sufran starvation cuando siguen llegando
+nuevos lectores?
+
+\begin{lstlisting}
+readSwitch = Lightswitch()
+roomEmpty = Semaphore(1)
+turnstile = Semaphore(1)
+
+# Escritor
+turnstile.wait()
+roomEmpty.wait()
+
+# seccion critica
+
+turnstile.signal()
+roomEmpty.signal()
+
+# Lector
+turnstile.wait()
+turnstile.signal()
+
+readSwitch.lock(roomEmpty)
+
+# seccion critica
+
+readSwitch.unlock(roomEmpty)
+\end{lstlisting}
+
+\section{Cigarette Smokers}
+
+\subsection{Pregunta 3}
+
+¿Cómo se coordinan los fumadores para que solamente continúe el fumador
+que posee el tercer ingrediente necesario?
+
+\begin{lstlisting}
+agentSem = Semaphore(1)
+
+tobacco = Semaphore(0)
+paper = Semaphore(0)
+match = Semaphore(0)
+
+isTobacco = False
+isPaper = False
+isMatch = False
+
+tobaccoSem = Semaphore(0)
+paperSem = Semaphore(0)
+matchSem = Semaphore(0)
+
+mutex = Semaphore(1)
+
+# Agente A
+agentSem.wait()
+tobacco.signal()
+paper.signal()
+
+# Agente B
+agentSem.wait()
+paper.signal()
+match.signal()
+
+# Agente C
+agentSem.wait()
+tobacco.signal()
+match.signal()
+
+# Pusher de tabaco
+tobacco.wait()
+mutex.wait()
+
+if (isPaper) {
+    isPaper = False
+    matchSem.signal()
+}
+else if (isMatch) {
+    isMatch = False
+    paperSem.signal()
+}
+else {
+    isTobacco = True
+}
+
+mutex.signal()
+
+# Pusher de papel
+paper.wait()
+mutex.wait()
+
+if (isTobacco) {
+    isTobacco = False
+    matchSem.signal()
+}
+else if (isMatch) {
+    isMatch = False
+    tobaccoSem.signal()
+}
+else {
+    isPaper = True
+}
+
+mutex.signal()
+
+# Pusher de fosforos
+match.wait()
+mutex.wait()
+
+if (isTobacco) {
+    isTobacco = False
+    paperSem.signal()
+}
+else if (isPaper) {
+    isPaper = False
+    tobaccoSem.signal()
+}
+else {
+    isMatch = True
+}
+
+mutex.signal()
+
+# Fumador con tabaco
+tobaccoSem.wait()
+makeCigarette()
+agentSem.signal()
+smoke()
+
+# Fumador con papel
+paperSem.wait()
+makeCigarette()
+agentSem.signal()
+smoke()
+
+# Fumador con fosforos
+matchSem.wait()
+makeCigarette()
+agentSem.signal()
+smoke()
+\end{lstlisting}
+
+\section{Barbershop}
+
+\subsection{Pregunta 4}
+
+¿Cómo se coordina al barbero y a los clientes cuando la barbería tiene
+capacidad limitada y el barbero duerme cuando no hay clientes?
+
+\begin{lstlisting}
+n = 4
+customers = 0
+
+mutex = Semaphore(1)
+customer = Semaphore(0)
+barber = Semaphore(0)
+customerDone = Semaphore(0)
+barberDone = Semaphore(0)
+
+# Cliente
+mutex.wait()
+
+if (customers == n) {
+    mutex.signal()
+    balk()
+}
+
+customers += 1
+mutex.signal()
+
+customer.signal()
+barber.wait()
+
+getHairCut()
+
+customerDone.signal()
+barberDone.wait()
+
+mutex.wait()
+customers -= 1
+mutex.signal()
+
+# Barbero
+customer.wait()
+barber.signal()
+
+cutHair()
+
+customerDone.wait()
+barberDone.signal()
+\end{lstlisting}
+
+\end{document}
